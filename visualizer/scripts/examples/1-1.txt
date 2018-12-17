@@ -1,0 +1,4 @@
+init(object(order,1),value(line,(14,1))).
+init(object(order,2),value(line,(16,1))).
+init(object(order,1),value(line,(13,1))).
+init(object(order,2),value(line,(15,1))).
