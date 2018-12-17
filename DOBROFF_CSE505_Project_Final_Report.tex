@@ -1,0 +1,174 @@
+\documentclass[12pt]{article}
+\setlength{\topmargin}{-.5in}
+\setlength{\textheight}{9in}
+\setlength{\oddsidemargin}{.125in}
+\setlength{\textwidth}{6.25in}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{babel,blindtext}
+\graphicspath{ {./images/} }
+\begin{document}
+
+\title{CSE 505 Research Project}
+\author{Zach Dobroff\\
+SUNY Stony Brook}
+\date{\today}
+\maketitle
+
+\section*{Introduction}
+
+\textbf{\textit{Experimenting with robotic intra-logistics domains}} is a research paper (by Martin Gebser, Philipp Obermeier, Thomas Otto and Torsten Schaub University of Potsdam, Germany Orkunt Sabuncu TED University, Ankara, Turkey Van Nguyen and Tran Cao Son New Mexico State University, Las Cruces, USA) detailing how to use Answer Set Programming in order to experiment with automatizing warehouse operations using robots. The paper introduces a tool called asprilo (asprilo stands for Answer Set Programming for robotic intra-logistics), which is built in clingo and Python, designed to visualize, solve and benchmark given problems in this space.
+
+\section*{Paper Summary}
+
+\subsection*{Defining the problem}
+
+The problems are generally defined as such:
+
+\begin{itemize}[noitemsep]
+\item	A \textbf{warehouse} is a two-dimensional grid of squares
+\item	Each grid square is called a \textbf{node} and has a unique X,Y value
+\item	A warehouse contains \textbf{robots}, \textbf{shelves}, \textbf{stations}, \textbf{storage areas} and \textbf{highways}
+\item	Each of the above is one grid square in size
+\item	Robots are mobile and carry out \textbf{orders}
+\item	Robots can carry shelves
+\item	Each time step, a robot can either \textbf{move}, \textbf{pick up a shelf}, \textbf{put down a shelf} or \textbf{deliver} a product to a station
+\item	Only one robot may occupy a given square at a time
+\item	One robot can share a square with one shelf (a robot carrying a shelf must go around other shelves)
+\item	An order is a non-empty set of \textbf{order lines}, which are requests for a certain quantity of a certain product, delivered to a certain station 
+\item	An order is fulfilled if all order lines are fulfilled
+\item	Shelves are stationary and contain \textbf{products}
+\item	A storage areas is a grid square where shelves can be placed
+\item	Only one shelf can occupy a given square at a time
+\item	Stations act as a destination (a robot delivers a product to a station to fulfill an order)
+\item	Highway grid squares are transit areas for travelling robots (idle robots should not stop on highways)
+\item	Shelves cannot be placed on highways
+\end{itemize}
+
+Additionally, the paper specifies several problem constraints, called \textbf{domains}:
+
+\begin{itemize}[noitemsep]
+\item	Domain A
+	\begin{itemize}[noitemsep]
+	\item	Product quantities are required at a station for an order to be completed
+	\item	A single delivery can only fulfill a single order line
+	\item	Multiple order lines require multiple deliveries
+	\end{itemize} 
+\item	Domain B
+	\begin{itemize}[noitemsep]
+	\item	A product must be delivered to the station for the order to be completed, but in any quantity
+	\item	Like Domain A, a single delivery can only fulfill a single order line
+	\item	Like Domain A, multiple order lines require multiple deliveries
+	\end{itemize} 
+\item	Domain C
+	\begin{itemize}[noitemsep]
+	\item	One delivery action can fulfill multiple order lines
+	\end{itemize} 
+\item	Domain M
+	\begin{itemize}[noitemsep]
+	\item	A drastic simplification of the problem
+	\item	Orders are fulfilled if a robot is under a shelf containing the desired product
+	\item	Shelves only contain a single unique product
+	\item	No deliveries are required
+	\item	No pick up  or put down actions are required
+	\end{itemize} 
+\item	Domains A\textsuperscript{M},  B\textsuperscript{M} and C\textsuperscript{M}
+	\begin{itemize}[noitemsep]
+	\item	Only deal with singleton orders using the proper domain constraints
+	\item	Shelves can only contain one type of product
+	\end{itemize} 
+\end{itemize} 
+
+\section*{Asprilo}
+
+The asprilo program is made up of several components, an instance generator, a checker and a visualizer. The generator takes a series of arguments and outputs an ASP file containing initial objects and their locations according to the inputted specifications. The generator supports three types of layouts, structured, randomized and customized. In the structured layout, stations and robots are initially placed in the upper and lower row, respectively. Shelves are placed in rectangular clusters reachable via surrounding highways. Additionally, the generator can create instances in batches via a Python script. The checker is where the main logic occurs: robots move, deliver products and orders are completed. The checker throws errors if orders cannot be completed or other problems occur. The visualizer is a Python program that shows an animation of the individual steps taken in the problem-solving process. A user can create instances using the visualizer instead of using the generator program, but only one at a time.
+
+\section*{Implement, Verify and Extend}
+
+\subsection*{Installation}
+
+Asprilo requires clingo (clingo can be downloaded from Potassco’s github), Python version 2.x, the clingo Python module (available through an Anaconda distribution, be sure to download a version with py27 in its name) and either a Linux or Mac operating system. Unfortunately, asprilo does not run well on Windows, this is because asprilo is written in Python 2.x using an imported clingo module. This clingo module is not compatible with Python 2.x on Windows, but a compatible version exists for Linux or Mac.
+
+\subsection*{Problem Source}
+
+The paper has a table of example problem sets with a domain, size and number of robots, showing how long it took for that problem set to resolve. Some of the entries timed out and unfortunately, the paper does not say why. My initial thought was to classify timeouts as one of the following:
+
+\begin{itemize}[noitemsep]
+\item	Traffic jam
+	\begin{itemize}[noitemsep]
+	\item	The robots jam up somewhere, creating gridlock which makes some orders impossible to fulfill
+	\item	Too many objects, not enough space for the robots to move
+	\end{itemize}
+\item	Poor path finding
+	\begin{itemize}[noitemsep]
+	\item	May have some overlap with traffic jams
+	\end{itemize}
+\item	Impossible objective
+	\begin{itemize}[noitemsep]
+	\item	Maybe the robots cannot reach the stations or shelves
+	\end{itemize} 
+\item	Other
+\end{itemize}
+
+After running several tests of my own, I determined that the reason for the timeouts was due to the solving algorithm running in exponential time: O(N\textsuperscript{R}) where R is the number of robots in the instance. 
+
+\subsection*{Time Complexity}
+
+The following images show that the time complexity to solve an instance increases with the number of robots required to solve an instance. The first image shows that for $R=2$, the solving time is roughly equal to$ N\textsuperscript{2}$, the next two images show that for $R=5$, the solving time is roughly equal to $N\textsuperscript{5}$ or exponential time, the last two images show that for $R=8$, the solving time is roughly equal to $N\textsuperscript{8}$ or exponential time.
+
+
+\begin{figure}[!htb]
+\includegraphics[width=0.5\textwidth]{r2time}
+\caption{$R=2$, $N\textsuperscript{2}$ Time}
+\label{fig:Figure1}
+\end{figure}
+
+\begin{figure}[!htb]
+\minipage{0.5\textwidth}
+  \includegraphics[width=\linewidth]{r5time2}
+  \caption{$R=5$, $N\textsuperscript{5}$ Time}\label{fig:Figure 2}
+\endminipage\hfill
+\minipage{0.5\textwidth}
+  \includegraphics[width=\linewidth]{r5time}
+  \caption{$R=5$, Exp. Time}\label{fig:Figure 3}
+\endminipage\hfill
+\end{figure}
+
+\begin{figure}[!htb]
+\minipage{0.5\textwidth}
+  \includegraphics[width=\linewidth]{r8time2}
+  \caption{$R=8$, $N\textsuperscript{8}$ Time}\label{fig:Figure 4}
+\endminipage\hfill
+\minipage{0.5\textwidth}
+  \includegraphics[width=\linewidth]{r8time}
+  \caption{$R=8$, Exp. Time}\label{fig:Figure 5}
+\endminipage\hfill
+\end{figure}
+
+
+The above graphs measure steps versus the time that step took to solve in microseconds. Each of the above instances had the same layout, number of goals per robot and warehouse size. I set the instances to time out after about 5 minutes. R=2 finished solving, however R=5 and R=8 did not. These graphs were created in WolframAlpha.
+
+\subsection*{Solving the Time Complexity Issue}
+
+Solving the time complexity issue is important because the paper I base this project on uses answer set programming and asprilo. Using another program or technology stack may result in a better solution, but defeats the purpose of this assignment.
+
+My first solution to getting around the time complexity issue was to try better warehouse design. Some examples included placing the station in the center of the warehouse, placing the robots’ starting position closer to the shelves and re-arranging the shelves to allow for the algorithm to solve instances with fewer steps. While these changes improved the algorithm’s solving time, they did not solve the overall problem and cannot be considered a general solution. For example, an instance with a large number of orders or robots will always create a strain on time complexity. 
+
+My main solution to getting around the time complexity issue involves decentralization. Decentralization is used to break up a warehouse into individual cells. Every cell has its own asprilo instance, and robots cannot leave their cell of origin. Decentralization works because we can limit the number of robots used in a particular area, thereby setting an upper limit on time complexity while keeping the amount of work done in the entire warehouse the same. Decentralization also limits the physical size of each cell which limits the maximum number of steps required to move a shelf to a station. Note that due to the stand-alone nature of asprilo instances, each cell need not be identical or even contiguous.
+
+The next factor to consider is order lines. If the number of robots per cell is greater than 1, the number of steps required to solve an instance will eventually cause an additional strain on time complexity. To solve this we are going to limit the number of orders in a cell instance to one per robot. Once these orders are fulfilled, the cell instance will stop computing and restart with the next goal for each robot, this process will continue until all orders are fulfilled. This method works because the overhead cost of recalculating after each goal is preferable to the potentially long solving time required for longer goals.
+
+Another factor to consider is passing shelves between cells. In real world scenarios, products need to be moved from one section of a warehouse to another, however, in our solution, robots may not leave their cell of origin. To solve this, each cell may have an implicit border area with a station. This border area is shared by adjacent cells in order to facilitate moving shelves from one cell to another. When a robot ‘A’ from cell ‘A’ receives an order to pass a shelf to an adjacent cell ‘B’, the ‘A’ simply places the shelf in the proper station in the border area between cells ‘A’ and ‘B’. Once all orders are fulfilled, the shelf is removed from cell ‘A’ and placed in cell ’B’ via a python script. A robot ‘B’ from the cell ‘B’ may receive an order to move the shelf to another station.
+
+Finally, one last factor to consider is passing shelves long distances. The method described previously works well, but may cause a backlog of orders if passing shelves between cells overwhelms orders when shelves are moved inside cells. To solve this, we can add one more instance for the entire warehouse, except this time one node refers to one cell. The robots in this scaled-down instance travel in each border area and are responsible for moving shelves from one cell to another if the required travel distance is long.  This method works because there is no given scale between a node in asprilo and a square foot in the real world. Additionally, we can design each cell so that the border areas are empty outside of quick deliveries, so we can assume that the rapid transit robots can pass through cells without issue. If the scaled-down version is too large and slowdowns occur, this method may be used again (an instance showing cells made of cells) until a satisfactory solution is found.
+
+In summary, the combination of efficient warehouse design, decentralization, border areas and scaled-down cells efficiently solve large instances that would otherwise take an indeterminate amount of time to solve.  
+
+
+
+\section*{References}
+
+M. Gebser, P. Obermeier, T. Otto, T. Schaub, O. Sabuncu, V. Nguyen, and T. Son, “Experimenting with robotic intra-logistics domains” Theory and Practice of Logic Programming, pp. 502-519, July 2018.
+
+\end{document}
+
