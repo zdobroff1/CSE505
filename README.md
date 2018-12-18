@@ -1,10 +1,9 @@
-# ASPRILO [![Github Release](https://img.shields.io/github/release/potassco/asprilo/all.svg)](https://github.com/potassco/asprilo/releases)
-
 ## About
 
-This is source tree of **ASPRILO**, an intra-logistics benchmark suite for answer set
-programming. For further details, please consult the documentation on our website at
-<https://asprilo.github.io/>.
+This is my final project for CSE 505, using asprilo. The report is the pdf/tex file in the top level.
+I added two additional final from the basic asprilo framework: order_management.py and update_adjacent.py.
+Both programs implement the basic features meantioned in the writeup.
+Additionally, I have updated some other files to allow for easier benchmarking. 
 
 
 ## Directory Structure
